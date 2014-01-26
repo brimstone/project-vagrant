@@ -1,0 +1,2 @@
+#!/bin/bash
+vagrant init $1 $2
