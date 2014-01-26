@@ -1,2 +1,15 @@
 #!/bin/bash
-vagrant init $1 $2
+
+# if we have a box type
+if [ -n "$1" ]; then
+	sed -i "s/{{box}}/$1/" boxes.json
+	# if we have a url
+	if [ -n "$2" ]; then
+		sed -i "s/{{url}}/$1/" boxes.json
+	else
+		sed -i '/{{url}}/d' boxes.json
+	fi
+else
+	sed -i '/{{box}}/d' boxes.json
+	sed -i '/{{url}}/d' boxes.json
+fi
