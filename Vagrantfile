@@ -3,8 +3,8 @@
 
 require("json")
 
-boxes = JSON.load File.new("boxes.json")
-host = JSON.load File.new("host.json")
+boxes = JSON.load File.new(File.expand_path("../boxes.json", __FILE__))
+host = JSON.load File.new(File.expand_path("../host.json", __FILE__))
 
 # TODO: Support a "Base" config
 # TODO: Push this file to a different repo?
