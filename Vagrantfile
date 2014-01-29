@@ -3,16 +3,31 @@
 
 require("json")
 
-boxes = JSON.load File.new(File.expand_path("../boxes.json", __FILE__))
 host = JSON.load File.new(File.expand_path("../host.json", __FILE__))
+boxes = JSON.load File.new(File.expand_path("../boxes.json", __FILE__))
+default = boxes["default"]
+boxes.delete("default")
 
 # TODO: Support a "Base" config
 # TODO: Push this file to a different repo?
 # http://dustinrcollins.com/post/61277870546/multi-vm-vagrant-the-dry-way
 Vagrant.configure("2") do |box|
-	boxes.each do |opts|
-		otherboxes = boxes - [opts]
-		box.vm.define opts["name"] do |config|
+	boxes.keys.each do |optskey|
+		opts = default
+		boxes[optskey].keys.each do |key|
+			opts[key] = boxes[optskey][key]
+		end
+		boxes.delete(optskey)
+
+		$hosts = "cat <<DOG > /etc/hosts\n127.0.0.1	localhost " + optskey + "\n"
+		boxes.keys.each do |host|
+			$hosts += boxes[host]["ip"] + "\t" + host + "\n"
+		end
+		$hosts += "DOG"
+
+		$hostname = "echo " + optskey + " > /etc/hostname; hostname " + optskey
+
+		box.vm.define optskey do |config|
 			# which box to use as a base
 			unless opts["box"].nil?
 				config.vm.box = opts["box"]
@@ -81,11 +96,13 @@ Vagrant.configure("2") do |box|
 				end
 			end
 
+			config.vm.provision "shell", inline: $hosts
+			config.vm.provision "shell", inline: $hostname
 			# Run shell commands for box
 			unless opts["commands"].nil?
 				opts["commands"].each do |command|
 					config.vm.provider :virtualbox do |vb|
-						config.vm.provision :shell, :inline => command    
+						config.vm.provision :shell, inline: command
 					end
 				end
 			end
@@ -98,7 +115,6 @@ Vagrant.configure("2") do |box|
 					chef.cookbooks_path = "cookbooks"
 				#	chef.roles_path = "../my-recipes/roles"
 				#	chef.data_bags_path = "../my-recipes/data_bags"
-					chef.add_recipe "hostnames"
 					unless opts["recipes"].nil?
 						opts["recipes"].each do |recipe|
 							chef.add_recipe recipe
@@ -112,10 +128,9 @@ Vagrant.configure("2") do |box|
 				#
 				#	# You may also specify custom JSON attributes:
 				#	chef.json = { :mysql_password => "foo" }
-					chef.json = { :boxes => otherboxes, :self => opts, :host => host }
+			# [todo] - Need to make otherboxes work again		chef.json = { :boxes => otherboxes, :self => opts, :host => host }
 				end
 			end
-		
 		end
 	end
 end

@@ -1,9 +1,9 @@
-[
-	{
-		"name": "alpha",
+{
+	"default": {
 		"box":	"{{box}}",
-		"url":	"{{url}}",
+		"url":	"{{url}}"
+	},
+	"alpha": {
 		"ip": "172.16.0.10"
 	}
-]
-
+}
