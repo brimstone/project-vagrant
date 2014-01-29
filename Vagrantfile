@@ -17,6 +17,7 @@ Vagrant.configure("2") do |box|
 		boxes[optskey].keys.each do |key|
 			opts[key] = boxes[optskey][key]
 		end
+		# something should be done here to preserve the old box hash, to be added back later.
 		boxes.delete(optskey)
 
 		$hosts = "cat <<DOG > /etc/hosts\n127.0.0.1	localhost " + optskey + "\n"
@@ -132,5 +133,6 @@ Vagrant.configure("2") do |box|
 				end
 			end
 		end
+		boxes[optskey] = opts
 	end
 end
