@@ -13,7 +13,7 @@ boxes.delete("default")
 # http://dustinrcollins.com/post/61277870546/multi-vm-vagrant-the-dry-way
 Vagrant.configure("2") do |box|
 	boxes.keys.each do |optskey|
-		opts = default
+		opts = default.clone()
 		boxes[optskey].keys.each do |key|
 			opts[key] = boxes[optskey][key]
 		end
@@ -21,8 +21,8 @@ Vagrant.configure("2") do |box|
 		boxes.delete(optskey)
 
 		$hosts = "cat <<DOG > /etc/hosts\n127.0.0.1	localhost " + optskey + "\n"
-		boxes.keys.each do |host|
-			$hosts += boxes[host]["ip"] + "\t" + host + "\n"
+		boxes.keys.each do |hostname|
+			$hosts += boxes[hostname]["ip"] + "\t" + hostname + "\n"
 		end
 		$hosts += "DOG"
 
@@ -111,7 +111,7 @@ Vagrant.configure("2") do |box|
 			# path, and data_bags path (all relative to this Vagrantfile), and adding
 			# some recipes and/or roles.
 			#
-			unless opts["recipes"].nil? or opts["role"].nil?
+			unless opts["recipes"].nil? and opts["role"].nil?
 				config.vm.provision :chef_solo do |chef|
 					chef.cookbooks_path = "cookbooks"
 				#	chef.roles_path = "../my-recipes/roles"
@@ -129,7 +129,7 @@ Vagrant.configure("2") do |box|
 				#
 				#	# You may also specify custom JSON attributes:
 				#	chef.json = { :mysql_password => "foo" }
-			# [todo] - Need to make otherboxes work again		chef.json = { :boxes => otherboxes, :self => opts, :host => host }
+				# [todo] - Need to make otherboxes work again		chef.json = { :boxes => otherboxes, :self => opts, :host => host }
 				end
 			end
 		end
