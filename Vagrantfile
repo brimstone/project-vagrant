@@ -24,9 +24,9 @@ Vagrant.configure("2") do |box|
 		boxes.keys.each do |hostname|
 			$hosts += boxes[hostname]["ip"] + "\t" + hostname + "\n"
 		end
-		$hosts += "DOG"
+		$hosts += "DOG\n"
 
-		$hostname = "echo " + optskey + " > /etc/hostname; hostname " + optskey
+		$hosts += "echo " + optskey + " > /etc/hostname; hostname " + optskey
 
 		box.vm.define optskey do |config|
 			# which box to use as a base
@@ -98,7 +98,6 @@ Vagrant.configure("2") do |box|
 			end
 
 			config.vm.provision "shell", inline: $hosts
-			config.vm.provision "shell", inline: $hostname
 			# Run shell commands for box
 			unless opts["commands"].nil?
 				opts["commands"].each do |command|
