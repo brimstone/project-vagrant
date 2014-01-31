@@ -113,8 +113,8 @@ Vagrant.configure("2") do |box|
 			unless opts["recipes"].nil? and opts["role"].nil?
 				config.vm.provision :chef_solo do |chef|
 					chef.cookbooks_path = "cookbooks"
-				#	chef.roles_path = "../my-recipes/roles"
-				#	chef.data_bags_path = "../my-recipes/data_bags"
+					chef.roles_path = "roles"
+					chef.data_bags_path = "data_bags"
 					unless opts["recipes"].nil?
 						opts["recipes"].each do |recipe|
 							chef.add_recipe recipe
