@@ -128,7 +128,7 @@ Vagrant.configure("2") do |box|
 				#
 				#	# You may also specify custom JSON attributes:
 				#	chef.json = { :mysql_password => "foo" }
-				# [todo] - Need to make otherboxes work again		chef.json = { :boxes => otherboxes, :self => opts, :host => host }
+				chef.json = { :boxes => boxes, :self => opts, :host => host }
 				end
 			end
 		end
