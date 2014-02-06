@@ -7,6 +7,7 @@ host = JSON.load File.new(File.expand_path("../host.json", __FILE__))
 boxes = JSON.load File.new(File.expand_path("../boxes.json", __FILE__))
 default = boxes["default"]
 boxes.delete("default")
+host["domain"] = "local" unless host["domain"].nil?
 
 # TODO: Support a "Base" config
 # TODO: Push this file to a different repo?
@@ -20,13 +21,15 @@ Vagrant.configure("2") do |box|
 		# something should be done here to preserve the old box hash, to be added back later.
 		boxes.delete(optskey)
 
-		$hosts = "cat <<DOG > /etc/hosts\n127.0.0.1	localhost " + optskey + "\n"
+		hosts =  "cat <<DOG > /etc/hosts\n"
+		hosts += "127.0.0.1\tlocalhost.localdomain localhost\n"
+		hosts += "127.0.1.1\t" + optskey + "." + host["domain"] + " " + optskey + "\n"
 		boxes.keys.each do |hostname|
-			$hosts += boxes[hostname]["ip"] + "\t" + hostname + "\n"
+			hosts += boxes[hostname]["ip"] + "\t" + hostname + "." + host["domain"] + " " + hostname + "\n"
 		end
-		$hosts += "DOG\n"
+		hosts += "DOG\n"
 
-		$hosts += "echo " + optskey + " > /etc/hostname; hostname " + optskey
+		hosts += "echo " + optskey + " > /etc/hostname; hostname " + optskey
 
 		box.vm.define optskey do |config|
 			# which box to use as a base
@@ -47,7 +50,7 @@ Vagrant.configure("2") do |box|
 			# Create a private network, which allows host-only access to the machine
 			# using a specific IP.
 			unless opts["ip"].nil?
-				config.vm.network :private_network, ip: opts["ip"], virtuabox__intnet: true
+				config.vm.network :private_network, ip: opts["ip"]
 			end
 	
 			# Create a public network, which generally matched to bridged network.
@@ -97,13 +100,11 @@ Vagrant.configure("2") do |box|
 				end
 			end
 
-			config.vm.provision "shell", inline: $hosts
+			config.vm.provision "shell", inline: hosts
 			# Run shell commands for box
 			unless opts["commands"].nil?
 				opts["commands"].each do |command|
-					config.vm.provider :virtualbox do |vb|
-						config.vm.provision :shell, inline: command
-					end
+					config.vm.provision :shell, inline: command
 				end
 			end
 			# Enable provisioning with chef solo, specifying a cookbooks path, roles
