@@ -25,7 +25,9 @@ Vagrant.configure("2") do |box|
 		hosts += "127.0.0.1\tlocalhost.localdomain localhost\n"
 		hosts += "127.0.1.1\t" + optskey + "." + host["domain"] + " " + optskey + "\n"
 		boxes.keys.each do |hostname|
-			hosts += boxes[hostname]["ip"] + "\t" + hostname + "." + host["domain"] + " " + hostname + "\n"
+			unless boxes[hostname]["ip"].nil?
+				hosts += boxes[hostname]["ip"] + "\t" + hostname + "." + host["domain"] + " " + hostname + "\n"
+			end
 		end
 		hosts += "DOG\n"
 
