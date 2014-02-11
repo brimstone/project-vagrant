@@ -7,7 +7,7 @@ host = JSON.load File.new(File.expand_path("../host.json", __FILE__))
 boxes = JSON.load File.new(File.expand_path("../boxes.json", __FILE__))
 default = boxes["default"]
 boxes.delete("default")
-host["domain"] = "local" unless host["domain"].nil?
+host["domain"] = "local" if host["domain"].nil?
 
 # TODO: Support a "Base" config
 # TODO: Push this file to a different repo?
