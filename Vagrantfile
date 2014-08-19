@@ -9,6 +9,11 @@ default = boxes["default"]
 boxes.delete("default")
 host["domain"] = "local" if host["domain"].nil?
 
+Dir.glob("nodes/*.json").each do |nodefile|
+	node = JSON.load File.new(nodefile)
+	boxes[node['id']] = node
+end
+
 # TODO: Support a "Base" config
 # TODO: Push this file to a different repo?
 # http://dustinrcollins.com/post/61277870546/multi-vm-vagrant-the-dry-way
@@ -31,6 +36,7 @@ Vagrant.configure("2") do |box|
 		end
 		hosts += "DOG\n"
 
+		# TODO Debug this over config.vm.hostname
 		hosts += "echo " + optskey + " > /etc/hostname; hostname " + optskey
 
 		box.vm.define optskey do |config|
@@ -43,7 +49,10 @@ Vagrant.configure("2") do |box|
 			else
 				config.vm.box = "ubuntu-12.04-amd64"
 			end
-	
+
+			# Set our hostname properly
+			config.vm.hostname = optskey
+
 			# Create a forwarded port mapping which allows access to a specific port
 			# within the machine from a port on the host machine. In the example below,
 			# accessing "localhost:8080" will access port 80 on the guest machine.
@@ -119,11 +128,16 @@ Vagrant.configure("2") do |box|
 			# path, and data_bags path (all relative to this Vagrantfile), and adding
 			# some recipes and/or roles.
 			#
-			unless opts["recipes"].nil? and opts["role"].nil?
+			unless opts["recipes"].nil? and opts["roles"].nil?
 				config.vm.provision :chef_solo do |chef|
+	#				chef.log_level = :debug
 					chef.cookbooks_path = "cookbooks"
 					chef.roles_path = "roles"
-					chef.data_bags_path = "data_bags"
+					chef.data_bags_path = "."
+					chef.environments_path = "environments"
+					unless opts["environment"].nil?
+						chef.environment = opts["environment"]
+					end
 					unless opts["recipes"].nil?
 						opts["recipes"].each do |recipe|
 							chef.add_recipe recipe
@@ -131,13 +145,18 @@ Vagrant.configure("2") do |box|
 					end
 				#	chef.add_role "web"
 					# Add a Chef role if specified
-					unless opts["role"].nil?
-						chef.add_role(opts["role"])
+					unless opts["roles"].nil?
+						opts["roles"].each do |role|
+							chef.add_role role
+						end
 					end
 				#
 				#	# You may also specify custom JSON attributes:
 				#	chef.json = { :mysql_password => "foo" }
 					chef.json = { :boxes => boxes, :self => opts, :host => host, :location => "vagrant" }
+					unless opts["attributes"].nil?
+						chef.json = chef.json.merge(opts["attributes"])
+					end
 				end
 			end
 		end
