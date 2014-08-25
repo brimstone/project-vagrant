@@ -129,33 +129,53 @@ Vagrant.configure("2") do |box|
 			# some recipes and/or roles.
 			#
 			unless opts["recipes"].nil? and opts["roles"].nil?
-				config.vm.provision :chef_solo do |chef|
-	#				chef.log_level = :debug
-					chef.cookbooks_path = "cookbooks"
-					chef.roles_path = "roles"
-					chef.data_bags_path = "."
-					chef.environments_path = "environments"
-					unless opts["environment"].nil?
-						chef.environment = opts["environment"]
-					end
-					unless opts["recipes"].nil?
-						opts["recipes"].each do |recipe|
-							chef.add_recipe recipe
+				 if Vagrant.has_plugin?("vagrant-chef-zero") then
+					config.chef_zero.cookbooks = "cookbooks"
+					config.chef_zero.roles_path = "roles" if File.exists?"roles"
+					config.vm.provision :chef_client do |chef|
+						unless opts["environment"].nil?
+							chef.environment = opts["environment"]
+						end
+						unless opts["recipes"].nil?
+							opts["recipes"].each do |recipe|
+								chef.add_recipe recipe
+							end
+						end
+						unless opts["roles"].nil?
+							opts["roles"].each do |role|
+								chef.add_role role
+							end
 						end
 					end
-				#	chef.add_role "web"
-					# Add a Chef role if specified
-					unless opts["roles"].nil?
-						opts["roles"].each do |role|
-							chef.add_role role
+				else
+					config.vm.provision :chef_solo do |chef|
+	#					chef.log_level = :debug
+						chef.cookbooks_path = "cookbooks"
+						chef.roles_path = "roles" if File.exists?"roles"
+						chef.data_bags_path = "."
+						chef.environments_path = "environments" if File.exists?"environments"
+						unless opts["environment"].nil?
+							chef.environment = opts["environment"]
 						end
-					end
-				#
-				#	# You may also specify custom JSON attributes:
-				#	chef.json = { :mysql_password => "foo" }
-					chef.json = { :boxes => boxes, :self => opts, :host => host, :location => "vagrant" }
-					unless opts["attributes"].nil?
-						chef.json = chef.json.merge(opts["attributes"])
+						unless opts["recipes"].nil?
+							opts["recipes"].each do |recipe|
+								chef.add_recipe recipe
+							end
+						end
+					#	chef.add_role "web"
+						# Add a Chef role if specified
+						unless opts["roles"].nil?
+							opts["roles"].each do |role|
+								chef.add_role role
+							end
+						end
+					#
+					#	# You may also specify custom JSON attributes:
+					#	chef.json = { :mysql_password => "foo" }
+						chef.json = { :boxes => boxes, :self => opts, :host => host, :location => "vagrant" }
+						unless opts["attributes"].nil?
+							chef.json = chef.json.merge(opts["attributes"])
+						end
 					end
 				end
 			end
