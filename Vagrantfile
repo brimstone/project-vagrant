@@ -3,13 +3,15 @@
 
 require("json")
 
-host = JSON.load File.new(File.expand_path("../host.json", __FILE__))
-boxes = JSON.load File.new(File.expand_path("../boxes.json", __FILE__))
+basepath = File.expand_path("../", __FILE__)
+
+host = JSON.load File.new("#{basepath}/host.json")
+boxes = JSON.load File.new("#{basepath}/boxes.json")
 default = boxes["default"]
 boxes.delete("default")
 host["domain"] = "local" if host["domain"].nil?
 
-Dir.glob("nodes/*.json").each do |nodefile|
+Dir.glob("#{basepath}/nodes/*.json").each do |nodefile|
 	node = JSON.load File.new(nodefile)
 	boxes[node['id']] = node
 end
@@ -129,9 +131,10 @@ Vagrant.configure("2") do |box|
 			# some recipes and/or roles.
 			#
 			unless opts["recipes"].nil? and opts["roles"].nil?
-				 if Vagrant.has_plugin?("vagrant-chef-zero") then
-					config.chef_zero.cookbooks = "cookbooks"
-					config.chef_zero.roles_path = "roles" if File.exists?"roles"
+				if Vagrant.has_plugin?("vagrant-chef-zero") then
+					config.chef_zero.chef_repo_path = basepath
+					#config.chef_zero.cookbooks = "#{basepath}/cookbooks"
+					#config.chef_zero.data_bags = "#{basepath}/data_bags"
 					config.vm.provision :chef_client do |chef|
 						unless opts["environment"].nil?
 							chef.environment = opts["environment"]
@@ -145,6 +148,9 @@ Vagrant.configure("2") do |box|
 							opts["roles"].each do |role|
 								chef.add_role role
 							end
+						end
+						unless opts["attributes"].nil?
+							chef.json = chef.json.merge(opts["attributes"])
 						end
 					end
 				else
