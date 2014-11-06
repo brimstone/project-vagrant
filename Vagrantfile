@@ -95,13 +95,15 @@ Vagrant.configure("2") do |box|
 			# backing providers for Vagrant. These expose provider-specific options.
 			# Example for VirtualBox:
 			#
-			# config.vm.provider :virtualbox do |vb|
+			config.vm.provider :virtualbox do |vb|
 			#	# Don't boot with headless mode
 			#	vb.gui = true
 			#
 			#	# Use VBoxManage to customize the VM. For example to change memory:
-			#	vb.customize ["modifyvm", :id, "--memory", "1024"]
-			# end
+				unless opts["memory"].nil?
+					vb.customize ["modifyvm", :id, "--memory", opts["memory"]]
+				end
+			end
 			# VirtualBox customizations
 			unless host["ip"].nil?
 				config.vm.provider :virtualbox do |vb|
@@ -135,6 +137,7 @@ Vagrant.configure("2") do |box|
 					config.chef_zero.chef_repo_path = basepath
 					#config.chef_zero.cookbooks = "#{basepath}/cookbooks"
 					#config.chef_zero.data_bags = "#{basepath}/data_bags"
+					config.chef_zero.nodes = "#{basepath}/chef_nodes"
 					config.vm.provision :chef_client do |chef|
 						unless opts["environment"].nil?
 							chef.environment = opts["environment"]
@@ -157,9 +160,9 @@ Vagrant.configure("2") do |box|
 					config.vm.provision :chef_solo do |chef|
 	#					chef.log_level = :debug
 						chef.cookbooks_path = "cookbooks"
-						chef.roles_path = "roles" if File.exists?"roles"
+						chef.roles_path = "#{basepath}/roles" if File.exists?"roles"
 						chef.data_bags_path = "."
-						chef.environments_path = "environments" if File.exists?"environments"
+						chef.environments_path = "#{basepath}/environments" if File.exists?"#{basepath}/environments"
 						unless opts["environment"].nil?
 							chef.environment = opts["environment"]
 						end
